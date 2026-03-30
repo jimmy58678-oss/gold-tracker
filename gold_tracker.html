@@ -42,6 +42,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .pbar::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold2),transparent);border-radius:14px 14px 0 0}
 .pbar-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .pbar-l{display:flex;align-items:center;gap:14px}
+.price-three{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.price-col{display:flex;flex-direction:column;gap:3px}
+.price-divider{font-size:16px;color:var(--dim);opacity:.6;margin-top:8px}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(58,125,85,.5);animation:pulse 2s infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .plabel{font-size:10px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-bottom:3px}
@@ -179,22 +182,29 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="pbar-inner">
     <div class="pbar-l">
       <div class="dot" id="dot"></div>
-      <div>
-        <div class="plabel">XAU 即時金價（TWD / 克）</div>
-        <div id="pdisplay" class="pload"><div class="spin"></div> 連線中...</div>
-        <div class="psub" id="pusd"></div>
-        <div class="src-tag" id="srctag"></div>
+      <div class="price-three">
+        <div class="price-col">
+          <div class="plabel">XAU / USD</div>
+          <div id="xauusd" class="pload"><div class="spin"></div></div>
+          <div class="pchange" id="pchange"></div>
+        </div>
+        <div class="price-divider">→</div>
+        <div class="price-col">
+          <div class="plabel">USD / TWD</div>
+          <div class="fxbox" id="usdtwd">—</div>
+        </div>
+        <div class="price-divider">=</div>
+        <div class="price-col">
+          <div class="plabel">NT$ / 克</div>
+          <div id="pdisplay">—</div>
+        </div>
       </div>
-      <div class="pchange" id="pchange"></div>
     </div>
     <div class="pright">
       <div>
-        <div class="plabel">USD/TWD</div>
-        <div class="fxbox" id="usdtwd">—</div>
-      </div>
-      <div>
         <div class="updated" id="updated">—</div>
         <div class="updated" id="nextup" style="margin-top:2px"></div>
+        <div class="src-tag" id="srctag"></div>
       </div>
       <button class="btn-ref" onclick="fetchPrice(true)">↻ 更新</button>
     </div>
@@ -347,7 +357,7 @@ async function fetchUSDTWDFallback(){
 async function fetchPrice(manual=false){
   const dot=document.getElementById('dot');
   dot.style.cssText='width:8px;height:8px;border-radius:50%;background:var(--gold2);box-shadow:0 0 6px rgba(210,160,23,.5);flex-shrink:0';
-  if(manual)document.getElementById('pdisplay').innerHTML='<div class="pload"><div class="spin"></div> 更新中...</div>';
+  if(manual)document.getElementById('xauusd').innerHTML='<div class="pload"><div class="spin"></div> 更新中...</div>';
   let goldData=null,twd=null;
   try{goldData=await tryGoldApiCom();}catch{try{goldData=await tryYahoo();}catch{}}
   try{twd=await fetchUSDTWD();}catch{try{twd=await fetchUSDTWDFallback();}catch{twd=32.5;}}
@@ -355,9 +365,9 @@ async function fetchPrice(manual=false){
     usdtwd=twd;
     const gUSD=goldData.ozUSD/31.1035;
     priceG=gUSD*usdtwd;
-    document.getElementById('pdisplay').innerHTML=`<span class="pmain">NT$ ${priceG.toFixed(1)}</span><span style="font-size:12px;color:var(--dim);margin-left:5px">/ 克</span>`;
-    document.getElementById('pusd').textContent=`US$ ${gUSD.toFixed(2)}/g · US$ ${goldData.ozUSD.toFixed(2)}/troy oz`;
-    document.getElementById('usdtwd').textContent=usdtwd.toFixed(3);
+    document.getElementById('xauusd').innerHTML=`<span class="pmain">$${Math.round(goldData.ozUSD).toLocaleString()}</span>`;
+    document.getElementById('usdtwd').innerHTML=`<span class="pmain" style="font-size:20px">${usdtwd.toFixed(2)}</span>`;
+    document.getElementById('pdisplay').innerHTML=`<span class="pmain" style="font-size:20px">${priceG.toFixed(1)}</span>`;
     document.getElementById('srctag').textContent=`來源：${goldData.src}`;
     const pel=document.getElementById('pchange');
     pel.style.display='block';
@@ -376,7 +386,7 @@ async function fetchPrice(manual=false){
     }
     render();
   } else {
-    document.getElementById('pdisplay').innerHTML=`<span style="color:var(--red);font-size:12px">⚠ 無法取得金價，請確認網路後更新</span>`;
+    document.getElementById('xauusd').innerHTML=`<span style="color:var(--red);font-size:12px">⚠ 無法取得金價</span>`;
     dot.style.cssText='width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0';
   }
   updateHint();resetCountdown();
